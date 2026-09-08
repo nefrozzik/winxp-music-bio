@@ -1,0 +1,11 @@
+RewriteEngine On
+RewriteBase /
+
+# 1. Пропускаем существующие файлы и папки
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 2. Подставляем .html для страниц без расширения
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^([^/]+)/?$ .html [L,QSA]
