@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки bio.exe</title>
+    <style>
+        body { margin: 0; padding: 14px; font-family: Tahoma, Arial, sans-serif; font-size: 11px; background: #3a6ea5; color: #000; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; cursor: url("data:image/svg+xml,%3Csvg width='15' height='22' viewBox='0 0 15 22' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1,1 l0,14 l3,-3 l2,5 l2,-1 l-2,-5 l4,0 z' fill='white' stroke='black' stroke-width='1.2'/%3E%3C/svg%3E"), default; }
+        a, button, .window-controls img, .menu-items span { cursor: url("data:image/svg+xml,%3Csvg width='15' height='22' viewBox='0 0 15 22' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1,1 l0,14 l3,-3 l2,5 l2,-1 l-2,-5 l4,0 z' fill='white' stroke='black' stroke-width='1.2'/%3E%3C/svg%3E"), pointer !important; }
+        body::after { content: " "; display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)), radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.3) 100%); z-index: 9998; background-size: 100% 3px, 3px 100%, 100% 100%; pointer-events: none; transform: translateZ(0); -webkit-transform: translateZ(0); }
+
+        @keyframes openWindow { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .window { width: min(800px, 100%); border: 2px solid #000; background: #ece9d8; box-shadow: 2px 2px 0 #fff, 4px 4px 0 #444; position: relative; display: none; margin-bottom: 50px; opacity: 0; z-index: 10; } 
+        .window.show { animation: openWindow 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards; }
+        
+        .window-header { background: linear-gradient(180deg, #0a4cc5, #003f8c); color: #fff; padding: 5px 8px; font-weight: bold; font-size: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #4040a0; }
+        .window-controls { display: flex; gap: 2px; }
+        .window-controls img { width: 21px; height: 21px; border-radius: 3px; transition: transform 0.1s, filter 0.1s; }
+        .window-controls img:hover { filter: brightness(1.2); }
+        .window-controls img:active { transform: translateY(2px) scale(0.92); filter: brightness(0.8); }
+
+        .menu-bar { background: #ece9d8; border-bottom: 1px solid #aca899; padding: 2px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; flex-wrap: wrap; gap: 4px; }
+        
+        .menu-items > span { margin-right: 8px; padding: 2px 4px; border: 1px solid transparent; display: inline-block; transition: transform 0.1s; text-decoration: none; color: #000; }
+        .menu-items > span:hover { background: #316ac5; color: #fff; border: 1px solid #000; border-radius: 2px; }
+        .menu-items > span:active { transform: translateY(2px); }
+
+        .lang-switch { display: flex; gap: 2px; padding-left: 8px; border-left: 1px solid #aca899; box-shadow: -1px 0 #fff; margin-left: auto; }
+        .lang-switch button { border: 1px solid transparent; background: transparent; color: #000; font-family: Tahoma, Arial, sans-serif; font-size: 10px; padding: 2px 6px; border-radius: 2px; transition: transform 0.1s; cursor: pointer; }
+        .lang-switch button:hover { background: #c1d2ee; border: 1px solid #316ac5; }
+        .lang-switch button.active { background: #c1d2ee; border: 1px solid #316ac5; font-weight: bold; }
+        .lang-switch button:active { transform: translateY(2px); }
+
+        .window-body { padding: 15px; }
+        .fieldset { border: 1px solid #aca899; padding: 10px 15px 15px; margin-bottom: 15px; background: #faf9f4; border-radius: 3px; }
+        .fieldset legend { color: #003f8c; font-weight: bold; }
+        .form-group { margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+        .form-group label { width: 140px; font-weight: bold; }
+        .form-group input, .form-group textarea { flex: 1; min-width: 120px; padding: 4px; border: 2px inset #fff; background: #fff; font-family: Tahoma; font-size: 11px; }
+        .form-group textarea { resize: vertical; min-height: 50px; }
+
+        .item-box { background: #fff; border: 1px solid #aca899; padding: 10px; margin-bottom: 10px; position: relative; border-radius: 2px; transition: opacity 0.2s; }
+        .item-box.collapsed { padding: 4px 6px; }
+        .item-box.collapsed .item-content { display: none; }
+        .item-box.dragging { opacity: 0.4; border: 2px dashed #0a4cc5; }
+        
+        .platform-item { background: #ece9d8; padding: 6px 0; margin-bottom: 6px; border-radius: 2px; transition: opacity 0.2s; }
+        .platform-item.dragging { opacity: 0.4; border: 2px dashed #0a4cc5 !important; background: #fff; }
+
+        .drag-handle { background: #e0e0e0; border: 1px solid #aca899; padding: 4px; text-align: center; color: #555; font-weight: bold; font-size: 10px; margin-bottom: 10px; cursor: grab; }
+        .drag-handle:active { cursor: grabbing; background: #c1d2ee; }
+        .drag-handle-inline { margin-bottom: 0; margin-right: 5px; padding: 2px 5px; display: inline-block; cursor: grab; }
+        
+        .fieldset-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+        .fieldset-tools { display: flex; gap: 5px; align-items: center; }
+        
+        .item-header-bar {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(180deg, #f0ede0 0%, #dcd8cc 100%);
+            border: 1px solid #b2aea0;
+            padding: 4px 6px;
+            margin-bottom: 8px;
+            gap: 6px;
+            user-select: none;
+            cursor: grab;
+            border-radius: 2px;
+        }
+        .item-header-bar:active { cursor: grabbing; }
+        .item-box.collapsed .item-header-bar { margin-bottom: 0; }
+        
+        .drag-handle-grip { font-size: 13px; color: #555; cursor: grab; padding: 0 3px; }
+        .item-badge { background: #003f8c; color: #fff; font-weight: bold; font-size: 10px; padding: 1px 5px; border-radius: 2px; min-width: 18px; text-align: center; }
+        .item-preview-thumb { width: 20px; height: 20px; object-fit: cover; border: 1px solid #7f9db9; background: #fff; border-radius: 2px; }
+        .item-preview-title { flex: 1; font-weight: bold; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+        
+        .item-header-actions { display: flex; gap: 2px; align-items: center; margin-left: auto; }
+        .item-btn {
+            padding: 1px 5px;
+            font-size: 10px;
+            min-width: 20px;
+            height: 20px;
+            line-height: 16px;
+            text-align: center;
+            background: #e0e0e0;
+            border: 2px outset #fff;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: Tahoma, sans-serif;
+            box-shadow: inset 0 1px 0 #fff;
+            transition: transform 0.05s;
+        }
+        .item-btn:hover:not(:disabled) { background: #f5f5f5; }
+        .item-btn:active:not(:disabled) { border-style: inset; transform: translateY(1px); box-shadow: none; }
+        .item-btn:disabled { opacity: 0.4; cursor: default; border: 1px solid #aca899; box-shadow: none; }
+        .item-btn.btn-del { color: #cc0000; }
+        .btn-sm { padding: 3px 8px; font-size: 10px; }
+
+        .btn { padding: 5px 15px; background: #e0e0e0; border: 2px outset #fff; color: #000; font-weight: bold; font-size: 11px; transition: transform 0.1s; display: inline-block; box-shadow: inset 0 1px 0 #fff; cursor: pointer; }
+        .btn:hover { background: #f5f5f5; }
+        .btn:active { border-style: inset; transform: translateY(2px) scale(0.97); box-shadow: none; }
+        
+        .remove-btn { background: #e0e0e0; border: 2px outset #fff; color: #cc0000; font-weight: bold; padding: 2px 6px; font-size: 10px; transition: transform 0.1s; cursor: pointer; }
+        .remove-btn:active { border-style: inset; transform: translateY(2px) scale(0.95); }
+        
+        .actions { text-align: right; margin-top: 15px; border-top: 1px solid #aca899; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;}
+        .accent-btn { color: #003f8c; }
+
+        #sort-dialog-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.4); z-index: 25000; display: none; justify-content: center; align-items: center; }
+        .sort-dialog { width: 440px; max-width: 95vw; background: #ece9d8; border: 2px solid #000; box-shadow: 2px 2px 0 #fff, 4px 4px 0 #444; opacity: 0; animation: openWindow 0.25s forwards; }
+        .sort-dialog-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 11px; }
+        .sort-dialog-content { display: flex; gap: 8px; }
+        .sort-listbox { flex: 1; height: 230px; background: #fff; border: 2px inset #fff; overflow-y: auto; padding: 2px; list-style: none; margin: 0; }
+        .sort-list-item { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border: 1px solid transparent; cursor: pointer; user-select: none; font-size: 11px; }
+        .sort-list-item:hover { background: #eef3fa; }
+        .sort-list-item.selected { background: #316ac5; color: #fff; }
+        .sort-list-item.selected .item-badge { background: #fff; color: #003f8c; }
+        .sort-list-item.dragging { opacity: 0.4; background: #c1d2ee; border: 1px dashed #003f8c; }
+        .sort-side-controls { display: flex; flex-direction: column; gap: 6px; justify-content: center; min-width: 80px; }
+
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #3a6ea5; z-index: 20000; display: flex; justify-content: center; align-items: center; }
+        .auth-dialog { width: 350px; background: #ece9d8; border: 2px solid #000; box-shadow: 2px 2px 0 #fff, 4px 4px 0 #444; opacity: 0; animation: openWindow 0.3s forwards; }
+        .auth-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .auth-body input { padding: 5px; border: 2px inset #fff; font-family: Tahoma; }
+        .error-msg { color: red; font-weight: bold; font-size: 11px; display: none; background: #ffdada; padding: 5px; border: 1px solid red; border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<div id="auth-overlay">
+    <div class="auth-dialog">
+        <div class="window-header" id="auth-header">Авторизация</div>
+        <div class="auth-body">
+            <p id="auth-msg" style="margin: 0; font-weight: bold; color: inherit;">Введите логин и пароль:</p>
+            <input type="text" id="auth-login" placeholder="Логин">
+            <input type="password" id="auth-pass" placeholder="Пароль">
+            <input type="password" id="auth-pass-confirm" placeholder="Подтвердите пароль" style="display: none;">
+            <div class="error-msg" id="auth-error">Неверный логин или пароль!</div>
+            <div style="text-align: right; margin-top: 10px;"><button class="btn accent-btn" onclick="handleAuth()">ОК</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="window" id="main-admin">
+    <div class="window-header">
+        <div><span data-i18n="winTitle">Свойства: bio.exe</span></div>
+        <div class="window-controls">
+            <img src="Minimize.png" alt="-">
+            <img src="Maximize.png" alt="[]">
+            <img src="Exit.png" alt="X" onclick="window.location.href='./'">
+        </div>
+    </div>
+    
+    <div class="menu-bar">
+        <div class="menu-items">
+            <span onclick="window.location.href='./'" data-i18n="goBack" style="font-weight: bold;">⬅ Назад к сайту</span>
+            <span data-i18n="menuFile">Файл</span>
+            <span data-i18n="menuEdit">Правка</span>
+            <span data-i18n="menuView">Вид</span>
+            <span data-i18n="menuHelp">Справка</span>
+        </div>
+        <div class="lang-switch">
+            <button class="lang-btn" data-lang="en">EN</button>
+            <button class="lang-btn active" data-lang="ru">RU</button>
+        </div>
+    </div>
+
+    <div class="window-body">
+        <div class="fieldset">
+            <legend data-i18n="profileLegend">Профиль (Главная карточка)</legend>
+            <div class="form-group"><label data-i18n="labelName">Имя (EN / RU):</label><input type="text" id="name_en"><input type="text" id="name_ru"></div>
+            <div class="form-group"><label data-i18n="labelDesc">Описание (EN / RU):</label><input type="text" id="sub_en"><input type="text" id="sub_ru"></div>
+            <div class="form-group"><label data-i18n="labelAvatar">Файл аватарки:</label><input type="text" id="avatar"></div>
+        </div>
+
+        <div class="fieldset">
+            <legend data-i18n="socialsLegend">Социальные сети</legend>
+            <div class="fieldset-header">
+                <button class="btn" onclick="addSocial()" data-i18n="btnAddSocial">+ Добавить соц. сеть</button>
+                <div class="fieldset-tools">
+                    <button class="btn btn-sm" onclick="toggleCollapseAll('social')" data-i18n="btnCollapseAll">↕ Свернуть / Развернуть все</button>
+                    <button class="btn btn-sm" onclick="openSortDialog('social')" data-i18n="btnQuickSort">⇅ Быстрая сортировка</button>
+                </div>
+            </div>
+            <div id="socials-container"></div>
+        </div>
+
+        <div class="fieldset">
+            <legend data-i18n="portfolioLegend">Портфолио (Проекты, Музыка, Дизайн)</legend>
+            <div class="fieldset-header">
+                <div>
+                    <button class="btn" onclick="addPortfolioItem()" data-i18n="btnAddPortfolio">+ Добавить работу</button>
+                    <button class="btn" onclick="addPortfolioByUpc()" data-i18n="btnAddByUpc" style="margin-left: 5px;">💿 Добавить по UPC</button>
+                </div>
+                <div class="fieldset-tools">
+                    <button class="btn btn-sm" onclick="toggleCollapseAll('portfolio')" data-i18n="btnCollapseAll">↕ Свернуть / Развернуть все</button>
+                    <button class="btn btn-sm" onclick="openSortDialog('portfolio')" data-i18n="btnQuickSort">⇅ Быстрая сортировка</button>
+                </div>
+            </div>
+            <div id="portfolio-container"></div>
+        </div>
+
+        <div class="actions">
+            <div>
+                <button class="btn" onclick="resetData()" data-i18n="btnReset">Сбросить настройки</button>
+                <button class="btn" onclick="saveAsDefault()" data-i18n="btnSaveDefault" style="margin-left: 5px;">💾 Сделать по умолчанию</button>
+            </div>
+            <button class="btn accent-btn" onclick="saveData()" data-i18n="btnSave">Применить и Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<div id="sort-dialog-overlay">
+    <div class="sort-dialog">
+        <div class="window-header">
+            <span id="sort-dialog-title" data-i18n="sortTitle">Быстрая сортировка</span>
+            <div class="window-controls">
+                <img src="Exit.png" alt="X" onclick="closeSortDialog()">
+            </div>
+        </div>
+        <div class="sort-dialog-body">
+            <p style="margin: 0;" data-i18n="sortHint">Выберите элемент и используйте стрелки или перетаскивайте:</p>
+            <div class="sort-dialog-content">
+                <ul class="sort-listbox" id="sort-listbox"></ul>
+                <div class="sort-side-controls">
+                    <button class="btn btn-sm" onclick="moveSortExtreme(true)" data-i18n="btnMoveTop" title="В самый верх">⤒ Вверх</button>
+                    <button class="btn btn-sm" onclick="moveSort(-1)" data-i18n="btnMoveUp" title="На одну позицию вверх">▲ Вверх</button>
+                    <button class="btn btn-sm" onclick="moveSort(1)" data-i18n="btnMoveDown" title="На одну позицию вниз">▼ Вниз</button>
+                    <button class="btn btn-sm" onclick="moveSortExtreme(false)" data-i18n="btnMoveBottom" title="В самый низ">⤓ Вниз</button>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 5px;">
+                <button class="btn accent-btn" onclick="applySortDialog()" data-i18n="btnApply">Применить</button>
+                <button class="btn" onclick="closeSortDialog()" data-i18n="btnCancel">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let sessionData = sessionStorage.getItem('sessionAuth');
+    let authCreds = sessionData ? JSON.parse(sessionData) : null;
+    let isFirstSetup = false;
+
+    // Pure JS SHA-256 fallback for non-HTTPS environments
+    function sha256Fallback(str) {
+        function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
+        const mathPow = Math.pow, maxWord = mathPow(2, 32);
+        let result = '';
+        const words = [];
+        const asciiBitLength = str.length * 8;
+        let hash = [];
+        const k = [];
+        let primeCounter = 0;
+        const isComposite = {};
+        for (let candidate = 2; primeCounter < 64; candidate++) {
+            if (!isComposite[candidate]) {
+                for (let i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }
+                hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+                k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+            }
+        }
+        str += '\x80';
+        while (str.length % 64 - 56) str += '\x00';
+        for (let i = 0; i < str.length; i++) {
+            const j = str.charCodeAt(i);
+            if (j >> 8) return; // ASCII only
+            words[i >> 2] |= j << ((3 - i) % 4) * 8;
+        }
+        words[words.length] = ((asciiBitLength / maxWord) | 0);
+        words[words.length] = (asciiBitLength);
+        for (let j = 0; j < words.length;) {
+            const w = words.slice(j, j += 16);
+            const oldHash = hash.slice(0);
+            for (let i = 0; i < 64; i++) {
+                const w15 = w[i - 15], w2 = w[i - 2];
+                const a = hash[0], e = hash[4];
+                const temp1 = hash[7] + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                    + ((e & hash[5]) ^ (~e & hash[6])) + k[i]
+                    + (w[i] = (i < 16) ? w[i] : (w[i - 16] + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                        + w[i - 7] + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) | 0);
+                const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                    + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+                hash = [(temp1 + temp2) | 0].concat(hash);
+                hash[4] = (hash[4] + temp1) | 0;
+            }
+            for (let i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }
+        }
+        for (let i = 0; i < 8; i++) {
+            for (let j = 3; j + 1; j--) {
+                const b = (hash[i] >> (j * 8)) & 255;
+                result += ((b < 16) ? '0' : '') + b.toString(16);
+            }
+        }
+        return result;
+    }
+
+    async function hashPassword(password) {
+        if (crypto && crypto.subtle) {
+            try {
+                const msgBuffer = new TextEncoder().encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            } catch(e) { /* fallback below */ }
+        }
+        return sha256Fallback(password);
+    }
+
+    async function checkAuthStatus() {
+        if (authCreds) { unlockAdmin(); return; }
+        try {
+            const res = await fetch('server.php?action=checkAuth');
+            if(!res.ok) throw new Error("Ошибка сервера " + res.status);
+            const data = await res.json();
+            if (!data.isSetup) {
+                isFirstSetup = true;
+                document.getElementById('auth-header').textContent = "Первоначальная настройка";
+                document.getElementById('auth-msg').textContent = "Придумайте логин и пароль:";
+                document.getElementById('auth-pass-confirm').style.display = "block";
+            }
+        } catch (e) { document.getElementById('auth-error').textContent = e.message; document.getElementById('auth-error').style.display = "block"; }
+    }
+
+    async function handleAuth() {
+        const user = document.getElementById('auth-login').value.trim();
+        const pass = document.getElementById('auth-pass').value.trim();
+        const err = document.getElementById('auth-error');
+        err.style.display = "none";
+        if (!user || !pass) { err.textContent = "Заполните все поля!"; err.style.display = "block"; return; }
+        try {
+            const hashedPass = await hashPassword(pass);
+            if (isFirstSetup) {
+                const passConfirm = document.getElementById('auth-pass-confirm').value.trim();
+                if (pass !== passConfirm) { err.textContent = "Пароли не совпадают!"; err.style.display = "block"; return; }
+                const res = await fetch('server.php?action=setupAuth', { method: 'POST', body: JSON.stringify({ login: user, hash: hashedPass }), headers: { 'Content-Type': 'application/json' }});
+                const result = await res.json();
+                if (result.success) {
+                    authCreds = { login: user, hash: hashedPass };
+                    sessionStorage.setItem('sessionAuth', JSON.stringify(authCreds));
+                    unlockAdmin();
+                } else { err.textContent = "Ошибка сервера."; err.style.display = "block"; }
+            } else {
+                const res = await fetch('server.php?action=login', { method: 'POST', body: JSON.stringify({ login: user, hash: hashedPass }), headers: { 'Content-Type': 'application/json' }});
+                const result = await res.json();
+                if (result.success) {
+                    authCreds = { login: user, hash: hashedPass };
+                    sessionStorage.setItem('sessionAuth', JSON.stringify(authCreds));
+                    unlockAdmin();
+                } else { err.textContent = "Неверный логин или пароль!"; err.style.display = "block"; }
+            }
+        } catch(e) { err.textContent = "Ошибка: " + e.message; err.style.display = "block"; }
+    }
+
+    async function unlockAdmin() {
+        document.getElementById('auth-overlay').style.display = 'none';
+        const win = document.getElementById('main-admin');
+        win.style.display = 'block';
+        setTimeout(() => { win.classList.add('show'); }, 50);
+        await loadDataFromServer(); 
+    }
+
+    function escapeHTML(str) {
+        if (str === undefined || str === null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    const i18nAdmin = {
+        en: { 
+            winTitle: 'Properties', goBack: '⬅ Back to site', profileLegend: 'Profile', labelName: 'Name (EN / RU):', labelDesc: 'Desc (EN / RU):', labelAvatar: 'Avatar URL:', socialsLegend: 'Socials', btnAddSocial: '+ Add Social', lblUrl: 'URL:', portfolioLegend: 'Portfolio (Projects)', btnAddPortfolio: '+ Add Item', btnAddPlatform: '+ Add Link', btnReset: 'Reset settings', btnSaveDefault: '💾 Save default', btnSave: 'Apply & Save', lblFile: 'Audio File (optional):', lblTitle: 'Title (EN/RU):', lblDesc: 'Short Desc (EN/RU):', lblFullDesc: 'Full Detail (Popup EN/RU):', lblCategory: 'Category (EN/RU):', lblLinks: 'Links:', btnDelete: 'Remove', lblSlug: 'Smartlink ID (Slug):', lblCover: 'Image/Cover URL:', menuFile: "File", menuEdit: "Edit", menuView: "View", menuHelp: "Help", dragHint: "☰ Drag to reorder", dragHintPlat: "☰",
+            btnCollapseAll: "↕ Collapse / Expand all", btnQuickSort: "⇅ Quick Sort", sortTitle: "Quick Reorder", sortHint: "Select an item and use buttons or drag to reorder:", btnMoveTop: "⤒ Top", btnMoveUp: "▲ Up", btnMoveDown: "▼ Down", btnMoveBottom: "⤓ Bottom", btnApply: "Apply", btnCancel: "Cancel", tipMoveTop: "Move to top", tipMoveUp: "Move up", tipMoveDown: "Move down", tipMoveBottom: "Move to bottom", tipCollapse: "Collapse / Expand",
+            lblUpc: 'Track UPC (Barcode):', placeholderUpc: '12-13 digits (e.g. 663918543313)', btnLookupUpc: '🔍 Find platforms by UPC', btnAddByUpc: '💿 Add by UPC', upcSearching: 'Searching platforms...', upcNotFound: 'Release not found by UPC', upcSuccess: '✓ Platforms & data found!', promptUpc: 'Enter track / album UPC (12-13 digits):'
+        },
+        ru: { 
+            winTitle: 'Свойства', goBack: '⬅ Назад к сайту', profileLegend: 'Профиль', labelName: 'Имя (EN / RU):', labelDesc: 'Описание (EN / RU):', labelAvatar: 'Файл аватарки:', socialsLegend: 'Социальные сети', btnAddSocial: '+ Добавить соц. сеть', lblUrl: 'URL:', portfolioLegend: 'Портфолио (Работы)', btnAddPortfolio: '+ Добавить работу', btnAddPlatform: '+ Ссылка', btnReset: 'Сбросить', btnSaveDefault: '💾 Сделать по умолчанию', btnSave: 'Применить и Сохранить', lblFile: 'Аудио (не обяз.):', lblTitle: 'Название (EN/RU):', lblDesc: 'Кратко (EN/RU):', lblFullDesc: 'Подробно (В окне EN/RU):', lblCategory: 'Категория (EN/RU):', lblLinks: 'Ссылки:', btnDelete: 'Удалить', lblSlug: 'ID страницы (slug):', lblCover: 'Обложка / Картинка:', menuFile: "Файл", menuEdit: "Правка", menuView: "Вид", menuHelp: "Справка", dragHint: "☰ Перетащите для сортировки", dragHintPlat: "☰",
+            btnCollapseAll: "↕ Свернуть / Развернуть все", btnQuickSort: "⇅ Быстрая сортировка", sortTitle: "Быстрая сортировка элементов", sortHint: "Выберите элемент и используйте стрелки или перетаскивайте:", btnMoveTop: "⤒ В самый верх", btnMoveUp: "▲ Вверх", btnMoveDown: "▼ Вниз", btnMoveBottom: "⤓ В самый низ", btnApply: "Применить", btnCancel: "Отмена", tipMoveTop: "В самый верх", tipMoveUp: "Вверх", tipMoveDown: "Вниз", tipMoveBottom: "В самый низ", tipCollapse: "Свернуть / Развернуть",
+            lblUpc: 'UPC трека (Штрихкод):', placeholderUpc: '12-13 цифр (например, 663918543313)', btnLookupUpc: '🔍 Найти платформы по UPC', btnAddByUpc: '💿 Добавить по UPC', upcSearching: 'Поиск по платформам...', upcNotFound: 'Релиз не найден по этому UPC', upcSuccess: '✓ Платформы и данные найдены!', promptUpc: 'Введите UPC трека или релиза (12-13 цифр):'
+        }
+    };
+
+    let adminLang = localStorage.getItem('siteLang') || 'ru';
+    let formRendered = false;
+    let bioData = { profile: {}, socials: [], portfolio: [] };
+
+    // Auto-scrolling window when dragging near top/bottom edges
+    window.addEventListener('dragover', (e) => {
+        if (!draggedItem) return;
+        const threshold = 70;
+        const speed = 14;
+        if (e.clientY < threshold) {
+            window.scrollBy(0, -speed);
+        } else if (e.clientY > window.innerHeight - threshold) {
+            window.scrollBy(0, speed);
+        }
+    });
+
+    let draggedItem = null;
+    function dragStart(e) {
+        e.stopPropagation(); 
+        draggedItem = e.currentTarget;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => draggedItem.classList.add('dragging'), 0);
+    }
+    
+    function dragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+        let target = e.currentTarget;
+        
+        if (draggedItem && target !== draggedItem && target.dataset.dragType === draggedItem.dataset.dragType) {
+            if (draggedItem.parentNode !== target.parentNode) {
+                target.before(draggedItem);
+            } else {
+                let children = Array.from(target.parentNode.children);
+                let draggedIdx = children.indexOf(draggedItem);
+                let targetIdx = children.indexOf(target);
+                if (draggedIdx < targetIdx) target.after(draggedItem);
+                else target.before(draggedItem);
+            }
+        }
+    }
+    
+    function dropItem(e) { 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        syncData(); 
+    }
+    
+    function dragEnd(e) { 
+        e.stopPropagation(); 
+        if (e.currentTarget) e.currentTarget.classList.remove('dragging'); 
+        draggedItem = null; 
+        syncData();
+        renderForm(); 
+    }
+
+    function onHeaderMouseDown(e, headerEl) {
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('textarea')) return;
+        const box = headerEl.closest('.item-box');
+        if (!box) return;
+        box.setAttribute('draggable', 'true');
+        const cleanup = () => {
+            box.removeAttribute('draggable');
+            window.removeEventListener('mouseup', cleanup);
+        };
+        window.addEventListener('mouseup', cleanup);
+    }
+
+    // Collapse / Expand state
+    let allCollapsed = { social: false, portfolio: false };
+    let itemCollapsedState = { social: {}, portfolio: {} };
+
+    function toggleCollapseAll(type) {
+        allCollapsed[type] = !allCollapsed[type];
+        const container = document.getElementById(type === 'social' ? 'socials-container' : 'portfolio-container');
+        if (!container) return;
+        const items = container.querySelectorAll('.item-box');
+        items.forEach((item, idx) => {
+            itemCollapsedState[type][idx] = allCollapsed[type];
+            item.classList.toggle('collapsed', allCollapsed[type]);
+            const btn = item.querySelector('.btn-collapse');
+            if (btn) btn.textContent = allCollapsed[type] ? '▸' : '▾';
+        });
+    }
+
+    function toggleItemCollapse(btn, type, index) {
+        const box = btn.closest('.item-box');
+        if (!box) return;
+        const isNowCollapsed = !box.classList.contains('collapsed');
+        box.classList.toggle('collapsed', isNowCollapsed);
+        btn.textContent = isNowCollapsed ? '▸' : '▾';
+        itemCollapsedState[type][index] = isNowCollapsed;
+    }
+
+    // Quick move item helpers
+    function moveItem(type, index, delta) {
+        syncData();
+        const arr = type === 'social' ? bioData.socials : bioData.portfolio;
+        const targetIdx = index + delta;
+        if (targetIdx < 0 || targetIdx >= arr.length) return;
+        const temp = arr[index];
+        arr[index] = arr[targetIdx];
+        arr[targetIdx] = temp;
+        if (type === 'portfolio') bioData.tracks = bioData.portfolio;
+        renderForm();
+    }
+
+    function moveItemExtreme(type, index, toTop) {
+        syncData();
+        const arr = type === 'social' ? bioData.socials : bioData.portfolio;
+        if (toTop && index === 0) return;
+        if (!toTop && index === arr.length - 1) return;
+        const [item] = arr.splice(index, 1);
+        if (toTop) arr.unshift(item);
+        else arr.push(item);
+        if (type === 'portfolio') bioData.tracks = bioData.portfolio;
+        renderForm();
+    }
+
+    function movePlatform(btn, delta) {
+        syncData();
+        const pItem = btn.closest('.portfolio-item-box');
+        const pIdx = Array.from(document.querySelectorAll('.portfolio-item-box')).indexOf(pItem);
+        if (pIdx === -1 || !bioData.portfolio[pIdx]) return;
+        const platItem = btn.closest('.platform-item');
+        const platIdx = Array.from(pItem.querySelectorAll('.platform-item')).indexOf(platItem);
+        const plats = bioData.portfolio[pIdx].platforms;
+        const targetIdx = platIdx + delta;
+        if (targetIdx < 0 || targetIdx >= plats.length) return;
+        const temp = plats[platIdx];
+        plats[platIdx] = plats[targetIdx];
+        plats[targetIdx] = temp;
+        renderForm();
+    }
+
+    // Quick Sort Dialog Logic
+    let sortDialogType = null;
+    let tempSortList = [];
+    let selectedSortIdx = -1;
+
+    function openSortDialog(type) {
+        syncData();
+        sortDialogType = type;
+        const sourceArr = type === 'social' ? bioData.socials : bioData.portfolio;
+        tempSortList = JSON.parse(JSON.stringify(sourceArr));
+        selectedSortIdx = tempSortList.length > 0 ? 0 : -1;
+        
+        const titleEl = document.getElementById('sort-dialog-title');
+        if (titleEl) {
+            titleEl.textContent = (adminLang === 'ru' ? 'Быстрая сортировка: ' : 'Quick Sort: ') + 
+                (type === 'social' ? (adminLang === 'ru' ? 'Соц. сети' : 'Socials') : (adminLang === 'ru' ? 'Портфолио' : 'Portfolio'));
+        }
+        
+        renderSortDialogList();
+        document.getElementById('sort-dialog-overlay').style.display = 'flex';
+    }
+
+    function closeSortDialog() {
+        document.getElementById('sort-dialog-overlay').style.display = 'none';
+        sortDialogType = null;
+        tempSortList = [];
+        selectedSortIdx = -1;
+    }
+
+    function renderSortDialogList() {
+        const listbox = document.getElementById('sort-listbox');
+        listbox.innerHTML = '';
+        
+        tempSortList.forEach((item, idx) => {
+            const li = document.createElement('li');
+            li.className = 'sort-list-item' + (idx === selectedSortIdx ? ' selected' : '');
+            li.draggable = true;
+            li.dataset.index = idx;
+            
+            let titleText = '';
+            let thumbHtml = '';
+            if (sortDialogType === 'social') {
+                titleText = item.name_ru || item.name_en || item.url || (adminLang === 'ru' ? 'Без названия' : 'Untitled');
+            } else {
+                titleText = item.title_ru || item.title_en || item.slug || (adminLang === 'ru' ? 'Без названия' : 'Untitled');
+                if (item.category_ru || item.category_en) {
+                    titleText += ` [${item.category_ru || item.category_en}]`;
+                }
+                if (item.cover) {
+                    thumbHtml = `<img src="${escapeHTML(item.cover)}" class="item-preview-thumb" onerror="this.style.display='none'">`;
+                }
+            }
+            
+            li.innerHTML = `
+                <span class="drag-handle-grip">☰</span>
+                <span class="item-badge">#${idx + 1}</span>
+                ${thumbHtml}
+                <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHTML(titleText)}</span>
+            `;
+            
+            li.onclick = () => {
+                selectedSortIdx = idx;
+                renderSortDialogList();
+            };
+            
+            li.ondragstart = (e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', idx);
+                li.classList.add('dragging');
+            };
+            li.ondragover = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            };
+            li.ondrop = (e) => {
+                e.preventDefault();
+                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                const toIdx = idx;
+                if (!isNaN(fromIdx) && fromIdx !== toIdx) {
+                    const [moved] = tempSortList.splice(fromIdx, 1);
+                    tempSortList.splice(toIdx, 0, moved);
+                    selectedSortIdx = toIdx;
+                    renderSortDialogList();
+                }
+            };
+            li.ondragend = () => {
+                li.classList.remove('dragging');
+            };
+            
+            listbox.appendChild(li);
+        });
+    }
+
+    function moveSort(delta) {
+        if (selectedSortIdx === -1 || tempSortList.length < 2) return;
+        const targetIdx = selectedSortIdx + delta;
+        if (targetIdx < 0 || targetIdx >= tempSortList.length) return;
+        const temp = tempSortList[selectedSortIdx];
+        tempSortList[selectedSortIdx] = tempSortList[targetIdx];
+        tempSortList[targetIdx] = temp;
+        selectedSortIdx = targetIdx;
+        renderSortDialogList();
+        const listbox = document.getElementById('sort-listbox');
+        const selectedEl = listbox.children[selectedSortIdx];
+        if (selectedEl) selectedEl.scrollIntoView({ block: 'nearest' });
+    }
+
+    function moveSortExtreme(toTop) {
+        if (selectedSortIdx === -1 || tempSortList.length < 2) return;
+        if (toTop && selectedSortIdx === 0) return;
+        if (!toTop && selectedSortIdx === tempSortList.length - 1) return;
+        const [item] = tempSortList.splice(selectedSortIdx, 1);
+        if (toTop) {
+            tempSortList.unshift(item);
+            selectedSortIdx = 0;
+        } else {
+            tempSortList.push(item);
+            selectedSortIdx = tempSortList.length - 1;
+        }
+        renderSortDialogList();
+        const listbox = document.getElementById('sort-listbox');
+        const selectedEl = listbox.children[selectedSortIdx];
+        if (selectedEl) selectedEl.scrollIntoView({ block: 'nearest' });
+    }
+
+    function applySortDialog() {
+        if (!sortDialogType) return;
+        if (sortDialogType === 'social') {
+            bioData.socials = tempSortList;
+        } else {
+            bioData.portfolio = tempSortList;
+            bioData.tracks = tempSortList;
+        }
+        closeSortDialog();
+        renderForm();
+    }
+
+    // --- UPC Lookup and Music Platform Discovery ---
+    function fetchDeezerJsonp(upc) {
+        return new Promise((resolve) => {
+            const callbackName = 'deezerCb_' + Math.random().toString(36).substring(2, 9);
+            const script = document.createElement('script');
+            let finished = false;
+            const timer = setTimeout(() => {
+                if (finished) return;
+                finished = true;
+                delete window[callbackName];
+                if (script.parentNode) script.parentNode.removeChild(script);
+                resolve(null);
+            }, 6000);
+
+            window[callbackName] = function(data) {
+                if (finished) return;
+                finished = true;
+                clearTimeout(timer);
+                delete window[callbackName];
+                if (script.parentNode) script.parentNode.removeChild(script);
+                if (data && !data.error) resolve(data);
+                else resolve(null);
+            };
+
+            script.src = `https://api.deezer.com/album/upc:${encodeURIComponent(upc)}?output=jsonp&callback=${callbackName}`;
+            script.onerror = () => {
+                if (finished) return;
+                finished = true;
+                clearTimeout(timer);
+                delete window[callbackName];
+                if (script.parentNode) script.parentNode.removeChild(script);
+                resolve(null);
+            };
+            document.body.appendChild(script);
+        });
+    }
+
+    async function fetchItunesUpc(upc) {
+        try {
+            const res = await fetch(`https://itunes.apple.com/lookup?upc=${encodeURIComponent(upc)}`);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (data && data.results && data.results.length > 0) return data.results[0];
+        } catch(e) {}
+        return null;
+    }
+
+    async function lookupUpcData(rawUpc) {
+        const upc = String(rawUpc).replace(/[^0-9]/g, '');
+        if (!upc) return null;
+
+        let [itunesData, deezerData] = await Promise.all([
+            fetchItunesUpc(upc),
+            fetchDeezerJsonp(upc)
+        ]);
+
+        // Fallback to server.php if both client requests fail
+        if (!itunesData && !deezerData) {
+            try {
+                const sRes = await fetch(`server.php?action=lookupUpc&upc=${encodeURIComponent(upc)}`);
+                if (sRes.ok) {
+                    const sData = await sRes.json();
+                    if (sData.itunes && sData.itunes.results && sData.itunes.results.length > 0) {
+                        itunesData = sData.itunes.results[0];
+                    }
+                    if (sData.deezer && !sData.deezer.error) {
+                        deezerData = sData.deezer;
+                    }
+                }
+            } catch(e) {}
+        }
+
+        if (!itunesData && !deezerData) return null;
+
+        const title = (itunesData && (itunesData.collectionName || itunesData.trackName)) || (deezerData && deezerData.title) || '';
+        const artist = (itunesData && itunesData.artistName) || (deezerData && deezerData.artist && deezerData.artist.name) || '';
+        const fullTitle = artist && !title.toLowerCase().includes(artist.toLowerCase()) ? `${artist} - ${title}` : title;
+
+        let cover = '';
+        if (deezerData && (deezerData.cover_xl || deezerData.cover_big)) {
+            cover = deezerData.cover_xl || deezerData.cover_big;
+        } else if (itunesData && itunesData.artworkUrl100) {
+            cover = itunesData.artworkUrl100.replace('100x100bb', '1000x1000bb');
+        }
+
+        let src = '';
+        if (deezerData && deezerData.tracks && deezerData.tracks.data && deezerData.tracks.data[0] && deezerData.tracks.data[0].preview) {
+            src = deezerData.tracks.data[0].preview;
+        } else if (itunesData && itunesData.previewUrl) {
+            src = itunesData.previewUrl;
+        }
+
+        const genre = (itunesData && itunesData.primaryGenreName) || (deezerData && deezerData.genres && deezerData.genres.data && deezerData.genres.data[0] && deezerData.genres.data[0].name) || 'Music';
+
+        const cleanTitle = fullTitle || title || ('track-' + upc);
+        const slug = cleanTitle.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '') || ('release-' + upc);
+
+        const platforms = [];
+        const query = (artist && title) ? `${artist} ${title}` : (fullTitle || title);
+
+        // Apple Music
+        if (itunesData && (itunesData.collectionViewUrl || itunesData.trackViewUrl)) {
+            platforms.push({ name: 'Apple Music', url: itunesData.collectionViewUrl || itunesData.trackViewUrl });
+        }
+
+        // Deezer
+        if (deezerData && deezerData.link) {
+            platforms.push({ name: 'Deezer', url: deezerData.link });
+        }
+
+        // Spotify
+        platforms.push({ name: 'Spotify', url: `https://open.spotify.com/search/${encodeURIComponent(query)}` });
+
+        // YouTube Music
+        platforms.push({ name: 'YouTube Music', url: `https://music.youtube.com/search?q=${encodeURIComponent(query)}` });
+
+        // Yandex Music
+        platforms.push({ name: 'Яндекс Музыка', url: `https://music.yandex.ru/search?text=${encodeURIComponent(query)}` });
+
+        // VK Music
+        platforms.push({ name: 'VK Музыка', url: `https://vk.com/audio?q=${encodeURIComponent(query)}` });
+
+        // SoundCloud
+        platforms.push({ name: 'SoundCloud', url: `https://soundcloud.com/search?q=${encodeURIComponent(query)}` });
+
+        // Songlink (smartlink page by UPC)
+        platforms.push({ name: 'Songlink', url: `https://song.link/album/upc/${upc}` });
+
+        return {
+            upc,
+            title: fullTitle || title,
+            artist,
+            cover,
+            src,
+            category: genre,
+            slug,
+            platforms
+        };
+    }
+
+    async function lookupUpcForItem(btn) {
+        const box = btn.closest('.portfolio-item-box');
+        if (!box) return;
+        const upcInput = box.querySelector('.p-upc');
+        const statusMsg = box.querySelector('.upc-status-msg');
+        const upcVal = upcInput ? upcInput.value.trim() : '';
+
+        if (!upcVal) {
+            if (statusMsg) {
+                statusMsg.style.color = '#cc0000';
+                statusMsg.textContent = adminLang === 'ru' ? 'Введите UPC!' : 'Enter UPC!';
+            }
+            return;
+        }
+
+        btn.disabled = true;
+        if (statusMsg) {
+            statusMsg.style.color = '#0055aa';
+            statusMsg.textContent = (i18nAdmin[adminLang] && i18nAdmin[adminLang].upcSearching) || 'Поиск...';
+        }
+
+        try {
+            const data = await lookupUpcData(upcVal);
+            if (!data) {
+                if (statusMsg) {
+                    statusMsg.style.color = '#cc0000';
+                    statusMsg.textContent = (i18nAdmin[adminLang] && i18nAdmin[adminLang].upcNotFound) || 'Не найдено';
+                }
+                btn.disabled = false;
+                return;
+            }
+
+            const titleEn = box.querySelector('.p-ten');
+            const titleRu = box.querySelector('.p-tru');
+            if (titleEn && (!titleEn.value || titleEn.value.trim() === '')) titleEn.value = data.title;
+            if (titleRu && (!titleRu.value || titleRu.value.trim() === '')) titleRu.value = data.title;
+
+            const coverInput = box.querySelector('.p-cover');
+            if (coverInput && (!coverInput.value || coverInput.value.trim() === '')) {
+                if (data.cover) coverInput.value = data.cover;
+            }
+
+            const srcInput = box.querySelector('.p-src');
+            if (srcInput && (!srcInput.value || srcInput.value.trim() === '')) {
+                if (data.src) srcInput.value = data.src;
+            }
+
+            const slugInput = box.querySelector('.p-slug');
+            if (slugInput && (!slugInput.value || slugInput.value.trim() === '')) {
+                if (data.slug) slugInput.value = data.slug;
+            }
+
+            const catEn = box.querySelector('.p-cat-en');
+            const catRu = box.querySelector('.p-cat-ru');
+            if (catEn && !catEn.value) catEn.value = 'Music';
+            if (catRu && !catRu.value) catRu.value = 'Музыка';
+
+            syncData();
+            const itemIdx = parseInt(box.dataset.index, 10);
+            if (bioData.portfolio[itemIdx]) {
+                const currentPlatforms = bioData.portfolio[itemIdx].platforms || [];
+                data.platforms.forEach(newP => {
+                    const existing = currentPlatforms.find(p => p.name.toLowerCase() === newP.name.toLowerCase());
+                    if (existing) {
+                        if (!existing.url || existing.url.trim() === '') existing.url = newP.url;
+                    } else {
+                        currentPlatforms.push(newP);
+                    }
+                });
+                bioData.portfolio[itemIdx].platforms = currentPlatforms;
+                bioData.portfolio[itemIdx].upc = data.upc;
+                if (!bioData.portfolio[itemIdx].cover && data.cover) bioData.portfolio[itemIdx].cover = data.cover;
+                if (!bioData.portfolio[itemIdx].src && data.src) bioData.portfolio[itemIdx].src = data.src;
+                if (!bioData.portfolio[itemIdx].title_en && data.title) bioData.portfolio[itemIdx].title_en = data.title;
+                if (!bioData.portfolio[itemIdx].title_ru && data.title) bioData.portfolio[itemIdx].title_ru = data.title;
+            }
+
+            renderForm();
+            const newBoxes = document.querySelectorAll('.portfolio-item-box');
+            if (newBoxes[itemIdx]) {
+                const newStatus = newBoxes[itemIdx].querySelector('.upc-status-msg');
+                if (newStatus) {
+                    newStatus.style.color = '#007700';
+                    newStatus.textContent = (i18nAdmin[adminLang] && i18nAdmin[adminLang].upcSuccess) || '✓ Найдено!';
+                }
+            }
+        } catch(err) {
+            console.error(err);
+            if (statusMsg) {
+                statusMsg.style.color = '#cc0000';
+                statusMsg.textContent = 'Ошибка запроса';
+            }
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function addPortfolioByUpc() {
+        const promptText = (i18nAdmin[adminLang] && i18nAdmin[adminLang].promptUpc) || 'Введите UPC трека или релиза (12-13 цифр):';
+        const rawUpc = prompt(promptText);
+        if (!rawUpc) return;
+        const cleanUpc = rawUpc.replace(/[^0-9]/g, '');
+        if (!cleanUpc) {
+            alert(adminLang === 'ru' ? 'Некорректный UPC (только цифры)!' : 'Invalid UPC (digits only)!');
+            return;
+        }
+
+        syncData();
+        const tempStatus = document.createElement('div');
+        tempStatus.style.cssText = 'position:fixed; top:20px; right:20px; background:#0055aa; color:#fff; padding:10px 16px; border-radius:4px; font-weight:bold; font-size:12px; z-index:99999; box-shadow:0 3px 10px rgba(0,0,0,0.3); border:2px solid #fff;';
+        tempStatus.textContent = (i18nAdmin[adminLang] && i18nAdmin[adminLang].upcSearching) || 'Поиск по платформам...';
+        document.body.appendChild(tempStatus);
+
+        try {
+            const data = await lookupUpcData(cleanUpc);
+            if (tempStatus.parentNode) tempStatus.parentNode.removeChild(tempStatus);
+
+            if (!data) {
+                alert(((i18nAdmin[adminLang] && i18nAdmin[adminLang].upcNotFound) || 'Релиз не найден по этому UPC') + ': ' + cleanUpc);
+                return;
+            }
+
+            const newItem = {
+                upc: data.upc,
+                slug: data.slug,
+                category_en: "Music",
+                category_ru: "Музыка",
+                cover: data.cover || "",
+                src: data.src || "",
+                title_en: data.title || "",
+                title_ru: data.title || "",
+                desc_en: data.artist ? `Release by ${data.artist}` : "",
+                desc_ru: data.artist ? `Релиз от ${data.artist}` : "",
+                full_desc_en: "",
+                full_desc_ru: "",
+                platforms: data.platforms || []
+            };
+
+            bioData.portfolio.unshift(newItem);
+            itemCollapsedState.portfolio[0] = false;
+            renderForm();
+
+            const container = document.getElementById('portfolio-container');
+            if (container) container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch(e) {
+            if (tempStatus.parentNode) tempStatus.parentNode.removeChild(tempStatus);
+            alert('Ошибка: ' + e.message);
+        }
+    }
+
+    async function loadDataFromServer() {
+        try {
+            const res = await fetch('server.php?action=getData');
+            const data = await res.json();
+            if (data && !data.error) bioData = data;
+        } catch(e) {}
+        if (!bioData.profile) bioData.profile = { en: "nefrozzik", ru: "nefrozzik" };
+        if (!bioData.subtitle) bioData.subtitle = { en: "Musician", ru: "Музыкант" };
+        if (!bioData.socials) bioData.socials = [];
+        
+        // Миграция старого массива tracks в portfolio
+        if (bioData.tracks && !bioData.portfolio) { bioData.portfolio = bioData.tracks; }
+        if (!bioData.portfolio) bioData.portfolio = [];
+        
+        bioData.portfolio.forEach(t => { 
+            if(!t.platforms) t.platforms = []; 
+            if(!t.upc) t.upc = '';
+        });
+        renderForm();
+        setAdminLang(adminLang);
+    }
+
+    function syncData() {
+        if (!formRendered) return;
+        bioData.profile.en = document.getElementById('name_en').value;
+        bioData.profile.ru = document.getElementById('name_ru').value;
+        bioData.subtitle.en = document.getElementById('sub_en').value;
+        bioData.subtitle.ru = document.getElementById('sub_ru').value;
+        bioData.avatar = document.getElementById('avatar').value;
+
+        bioData.socials = [];
+        document.querySelectorAll('.social-item').forEach(item => {
+            const nen = item.querySelector('.s-nen');
+            const nru = item.querySelector('.s-nru');
+            const url = item.querySelector('.s-url');
+            bioData.socials.push({ 
+                name_en: nen ? nen.value : '', 
+                name_ru: nru ? nru.value : '', 
+                url: url ? url.value : '' 
+            });
+        });
+
+        bioData.portfolio = [];
+        document.querySelectorAll('.portfolio-item-box').forEach(item => {
+            let pItem = {
+                upc: item.querySelector('.p-upc') ? item.querySelector('.p-upc').value.trim() : '',
+                slug: item.querySelector('.p-slug').value.trim().toLowerCase().replace(/\s+/g, '-'),
+                category_en: item.querySelector('.p-cat-en').value,
+                category_ru: item.querySelector('.p-cat-ru').value,
+                cover: item.querySelector('.p-cover').value,
+                src: item.querySelector('.p-src').value,
+                title_en: item.querySelector('.p-ten').value,
+                title_ru: item.querySelector('.p-tru').value,
+                desc_en: item.querySelector('.p-den').value,
+                desc_ru: item.querySelector('.p-dru').value,
+                full_desc_en: item.querySelector('.p-fden').value,
+                full_desc_ru: item.querySelector('.p-fdru').value,
+                platforms: []
+            };
+            item.querySelectorAll('.platform-item').forEach(linkItem => {
+                pItem.platforms.push({ name: linkItem.querySelector('.l-name').value, url: linkItem.querySelector('.l-url').value });
+            });
+            bioData.portfolio.push(pItem);
+        });
+        
+        // Сохраняем и в tracks для совместимости с релиз-страницей, если она ожидает tracks
+        bioData.tracks = bioData.portfolio; 
+    }
+
+    function renderForm() {
+        const t = i18nAdmin[adminLang] || i18nAdmin.ru;
+        document.getElementById('name_en').value = bioData.profile.en || '';
+        document.getElementById('name_ru').value = bioData.profile.ru || '';
+        document.getElementById('sub_en').value = bioData.subtitle.en || '';
+        document.getElementById('sub_ru').value = bioData.subtitle.ru || '';
+        document.getElementById('avatar').value = bioData.avatar || '';
+
+        const socContainer = document.getElementById('socials-container');
+        socContainer.innerHTML = '';
+        const totalSocials = bioData.socials.length;
+        bioData.socials.forEach((soc, index) => {
+            const isCollapsed = itemCollapsedState.social[index] !== undefined ? itemCollapsedState.social[index] : allCollapsed.social;
+            const previewTitle = soc.name_ru || soc.name_en || soc.url || (adminLang === 'ru' ? 'Новая соц. сеть' : 'New Social');
+            socContainer.insertAdjacentHTML('beforeend', `
+            <div class="item-box social-item ${isCollapsed ? 'collapsed' : ''}" data-index="${index}" data-drag-type="social" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropItem(event)" ondragend="dragEnd(event)">
+                <div class="item-header-bar" onmousedown="onHeaderMouseDown(event, this)">
+                    <span class="drag-handle-grip" title="${t.dragHint}">☰</span>
+                    <span class="item-badge">#${index + 1}</span>
+                    <span class="item-preview-title">${escapeHTML(previewTitle)}</span>
+                    <div class="item-header-actions">
+                        <button type="button" class="item-btn" title="${t.tipMoveTop}" onclick="moveItemExtreme('social', ${index}, true)" ${index === 0 ? 'disabled' : ''}>⤒</button>
+                        <button type="button" class="item-btn" title="${t.tipMoveUp}" onclick="moveItem('social', ${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
+                        <button type="button" class="item-btn" title="${t.tipMoveDown}" onclick="moveItem('social', ${index}, 1)" ${index === totalSocials - 1 ? 'disabled' : ''}>▼</button>
+                        <button type="button" class="item-btn" title="${t.tipMoveBottom}" onclick="moveItemExtreme('social', ${index}, false)" ${index === totalSocials - 1 ? 'disabled' : ''}>⤓</button>
+                        <button type="button" class="item-btn btn-collapse" title="${t.tipCollapse}" onclick="toggleItemCollapse(this, 'social', ${index})">${isCollapsed ? '▸' : '▾'}</button>
+                        <button type="button" class="item-btn btn-del" title="${t.btnDelete}" onclick="removeSocial(this)">✕</button>
+                    </div>
+                </div>
+                <div class="item-content">
+                    <div class="form-group"><label>${t.labelName}</label><input type="text" class="s-nen" value="${escapeHTML(soc.name_en || '')}"><input type="text" class="s-nru" value="${escapeHTML(soc.name_ru || '')}"></div>
+                    <div class="form-group"><label>${t.lblUrl}</label><input type="text" class="s-url" value="${escapeHTML(soc.url || '')}"></div>
+                </div>
+            </div>`);
+        });
+
+        const portContainer = document.getElementById('portfolio-container');
+        portContainer.innerHTML = '';
+        const totalPort = bioData.portfolio.length;
+        bioData.portfolio.forEach((item, index) => {
+            const isCollapsed = itemCollapsedState.portfolio[index] !== undefined ? itemCollapsedState.portfolio[index] : allCollapsed.portfolio;
+            const previewTitle = item.title_ru || item.title_en || item.slug || (adminLang === 'ru' ? 'Новая работа' : 'New Item');
+            const categoryBadge = item.category_ru || item.category_en ? ` <span style="font-weight:normal;color:#666;">[${escapeHTML(item.category_ru || item.category_en)}]</span>` : '';
+            const thumbImg = item.cover ? `<img src="${escapeHTML(item.cover)}" class="item-preview-thumb" onerror="this.style.display='none'">` : '';
+
+            let platformsHtml = `<div class="platforms-container">`;
+            const totalPlats = item.platforms.length;
+            item.platforms.forEach((plat, platIdx) => {
+                platformsHtml += `
+                <div class="platform-item form-group" data-drag-type="platform" style="margin-left:15px; border-left:2px solid #aca899; padding-left:8px; display:flex; align-items:center; gap:4px;" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropItem(event)" ondragend="dragEnd(event)">
+                    <div class="drag-handle-inline" onmousedown="this.parentNode.setAttribute('draggable', 'true')" onmouseup="this.parentNode.removeAttribute('draggable')" onmouseleave="this.parentNode.removeAttribute('draggable')" title="${t.dragHintPlat}">${t.dragHintPlat}</div>
+                    <input type="text" value="${escapeHTML(plat.name || '')}" class="l-name" style="max-width:110px;" placeholder="Spotify/GitHub">
+                    <input type="text" value="${escapeHTML(plat.url || '')}" class="l-url" placeholder="URL">
+                    <button type="button" class="item-btn" title="${t.tipMoveUp}" onclick="movePlatform(this, -1)" ${platIdx === 0 ? 'disabled' : ''}>▲</button>
+                    <button type="button" class="item-btn" title="${t.tipMoveDown}" onclick="movePlatform(this, 1)" ${platIdx === totalPlats - 1 ? 'disabled' : ''}>▼</button>
+                    <button type="button" class="item-btn btn-del" style="min-width:22px;" title="${t.btnDelete}" onclick="removePlatform(this)">✕</button>
+                </div>`;
+            });
+            platformsHtml += `</div><button type="button" class="btn btn-sm" style="margin-left:15px; margin-top:4px;" onclick="addPlatform(this)">${t.btnAddPlatform}</button>`;
+            
+            portContainer.insertAdjacentHTML('beforeend', `
+            <div class="item-box portfolio-item-box ${isCollapsed ? 'collapsed' : ''}" data-index="${index}" data-drag-type="portfolio" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropItem(event)" ondragend="dragEnd(event)">
+                <div class="item-header-bar" onmousedown="onHeaderMouseDown(event, this)">
+                    <span class="drag-handle-grip" title="${t.dragHint}">☰</span>
+                    <span class="item-badge">#${index + 1}</span>
+                    ${thumbImg}
+                    <span class="item-preview-title">${escapeHTML(previewTitle)}${categoryBadge}</span>
+                    <div class="item-header-actions">
+                        <button type="button" class="item-btn" title="${t.tipMoveTop}" onclick="moveItemExtreme('portfolio', ${index}, true)" ${index === 0 ? 'disabled' : ''}>⤒</button>
+                        <button type="button" class="item-btn" title="${t.tipMoveUp}" onclick="moveItem('portfolio', ${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
+                        <button type="button" class="item-btn" title="${t.tipMoveDown}" onclick="moveItem('portfolio', ${index}, 1)" ${index === totalPort - 1 ? 'disabled' : ''}>▼</button>
+                        <button type="button" class="item-btn" title="${t.tipMoveBottom}" onclick="moveItemExtreme('portfolio', ${index}, false)" ${index === totalPort - 1 ? 'disabled' : ''}>⤓</button>
+                        <button type="button" class="item-btn btn-collapse" title="${t.tipCollapse}" onclick="toggleItemCollapse(this, 'portfolio', ${index})">${isCollapsed ? '▸' : '▾'}</button>
+                        <button type="button" class="item-btn btn-del" title="${t.btnDelete}" onclick="removePortfolioItem(this)">✕</button>
+                    </div>
+                </div>
+                <div class="item-content">
+                    <div class="form-group" style="background:#eaf2fb; border:1px solid #b8d2ee; padding:5px 8px; border-radius:2px; margin-bottom:10px; display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <label style="color:#003f8c; font-weight:bold; width:auto; min-width:115px; margin:0;">${t.lblUpc}</label>
+                        <input type="text" value="${escapeHTML(item.upc || '')}" class="p-upc" placeholder="${t.placeholderUpc}" style="flex:1; min-width:130px; max-width:210px;">
+                        <button type="button" class="btn btn-sm accent-btn" onclick="lookupUpcForItem(this)">${t.btnLookupUpc}</button>
+                        <span class="upc-status-msg" style="font-weight:bold; font-size:11px; margin-left:4px;"></span>
+                    </div>
+                    <div class="form-group"><label style="color:#003f8c;">${t.lblCategory}</label><input type="text" value="${escapeHTML(item.category_en || '')}" class="p-cat-en" placeholder="Music"><input type="text" value="${escapeHTML(item.category_ru || '')}" class="p-cat-ru" placeholder="Музыка"></div>
+                    <div class="form-group"><label style="color:#003f8c;">${t.lblSlug}</label><input type="text" value="${escapeHTML(item.slug || '')}" class="p-slug" placeholder="my-cool-project"></div>
+                    <div class="form-group"><label>${t.lblCover}</label><input type="text" value="${escapeHTML(item.cover || '')}" class="p-cover" placeholder="cover.jpg"></div>
+                    <div class="form-group"><label>${t.lblFile}</label><input type="text" value="${escapeHTML(item.src || '')}" class="p-src" placeholder="track.mp3"></div>
+                    <div class="form-group"><label>${t.lblTitle}</label><input type="text" value="${escapeHTML(item.title_en || '')}" class="p-ten"><input type="text" value="${escapeHTML(item.title_ru || '')}" class="p-tru"></div>
+                    <div class="form-group"><label>${t.lblDesc}</label><input type="text" value="${escapeHTML(item.desc_en || '')}" class="p-den"><input type="text" value="${escapeHTML(item.desc_ru || '')}" class="p-dru"></div>
+                    <div class="form-group"><label>${t.lblFullDesc}</label><textarea class="p-fden">${escapeHTML(item.full_desc_en || '')}</textarea><textarea class="p-fdru">${escapeHTML(item.full_desc_ru || '')}</textarea></div>
+                    <div style="margin-top:10px; font-weight:bold; margin-bottom:8px;">${t.lblLinks}</div>
+                    ${platformsHtml}
+                </div>
+            </div>`);
+        });
+        formRendered = true;
+    }
+
+    function addSocial() { syncData(); bioData.socials.push({name_en:"", name_ru:"", url:""}); renderForm(); }
+    function removeSocial(btn) { btn.closest('.social-item').remove(); syncData(); renderForm(); }
+    
+    function addPortfolioItem() { 
+        syncData(); 
+        bioData.portfolio.push({ upc:"", slug:"", category_en:"", category_ru:"", cover:"", src: "", title_en: "", title_ru: "", desc_en: "", desc_ru: "", full_desc_en: "", full_desc_ru: "", platforms: [] }); 
+        renderForm(); 
+    }
+    function removePortfolioItem(btn) { btn.closest('.portfolio-item-box').remove(); syncData(); renderForm(); }
+    
+    function addPlatform(btn) { 
+        syncData(); 
+        let pItem = btn.closest('.portfolio-item-box');
+        let idx = Array.from(document.querySelectorAll('.portfolio-item-box')).indexOf(pItem);
+        bioData.portfolio[idx].platforms.push({name:"", url:""}); 
+        renderForm(); 
+    }
+    function removePlatform(btn) { btn.closest('.platform-item').remove(); syncData(); renderForm(); }
+
+    function setAdminLang(lang) {
+        if(formRendered) syncData(); 
+        adminLang = lang;
+        localStorage.setItem('siteLang', lang); 
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            if (i18nAdmin[lang] && i18nAdmin[lang][el.dataset.i18n]) {
+                el.textContent = i18nAdmin[lang][el.dataset.i18n];
+            }
+        });
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+        if(formRendered) renderForm(); 
+    }
+
+    async function saveData() {
+        syncData();
+        try {
+            const res = await fetch('server.php?action=saveData', { method: 'POST', body: JSON.stringify({ login: authCreds.login, hash: authCreds.hash, data: bioData }), headers: { 'Content-Type': 'application/json' }});
+            const result = await res.json();
+            if (result.success) alert(adminLang==='ru' ? "Успешно сохранено!" : "Saved!");
+            else alert("Ошибка при сохранении!");
+        } catch(e) { alert("Ошибка соединения."); }
+    }
+
+    async function saveAsDefault() {
+        syncData();
+        try {
+            const res = await fetch('server.php?action=saveDefault', { method: 'POST', body: JSON.stringify({ login: authCreds.login, hash: authCreds.hash, data: bioData }), headers: { 'Content-Type': 'application/json' }});
+            const result = await res.json();
+            if (result.success) alert(adminLang==='ru' ? "Сохранено как дефолт!" : "Saved as default!");
+        } catch(e) { alert("Ошибка соединения."); }
+    }
+
+    async function resetData() {
+        if(confirm(adminLang==='ru' ? "Сбросить к дефолту?" : "Reset to default?")) {
+            try {
+                const res = await fetch('server.php?action=reset', { method: 'POST', body: JSON.stringify({ login: authCreds.login, hash: authCreds.hash }), headers: { 'Content-Type': 'application/json' }});
+                const result = await res.json();
+                if (result.success) location.reload();
+            } catch(e) { alert("Ошибка соединения."); }
+        }
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', () => setAdminLang(btn.dataset.lang)));
+    checkAuthStatus();
+</script>
+</body>
+</html>
